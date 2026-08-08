@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Secrets: API keys never belong in the repository
+.env
+.env.local
+*.key
+
+# Local cache of provider responses
+.crowdgauge_cache/
+
+# macOS
+.DS_Store
+
+# Editors
+.idea/
+.vscode/

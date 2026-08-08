@@ -1,0 +1,42 @@
+# Dependabot version updates. Copy to .github/dependabot.yml in every repository
+# and keep only the ecosystems that repository actually uses.
+#
+# Without this file there are no version updates at all. Security alerts stay on
+# regardless, but they only fire for disclosed vulnerabilities, so pinned action
+# SHAs quietly rot in place. See standards/ci-cd.md section 2.
+#
+# Grouping keeps the PR count sane, but only minor and patch updates are grouped.
+# Majors arrive as individual pull requests: a breaking change bundled with a
+# dozen harmless patches blocks all of them, and the combined diff is impossible
+# to review honestly. Observed on 2026-07-28, where one group PR carried React
+# 18 to 19, Tailwind 3 to 4, recharts 2 to 3 and zustand 4 to 5 alongside a
+# security patch that was needed urgently.
+#
+# Review the version comment next to each SHA on every actions PR; Dependabot
+# updates the SHA and leaves the comment on the old major.
+version: 2
+updates:
+  # Actions are grouped wholesale, majors included: they are few, the diff is a
+  # handful of SHA lines, and a stale pin is a supply-chain concern rather than
+  # a compatibility one.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # CrowdGauge is a pure Python package, pip is the only other ecosystem here.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

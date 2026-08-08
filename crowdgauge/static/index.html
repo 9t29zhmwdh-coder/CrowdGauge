@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CrowdGauge</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div>
+          <h1>CrowdGauge</h1>
+          <p data-i18n="tagline">
+            How busy a place usually is, hour by hour, plus the live value when the data source
+            provides one.
+          </p>
+        </div>
+        <div class="masthead-controls">
+          <label class="field" for="language">
+            <span data-i18n="language">Language</span>
+            <select id="language">
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <form class="control-row" id="lookup-form">
+        <div class="field field--grow">
+          <label for="query" data-i18n="queryLabel">Location</label>
+          <input
+            type="text"
+            id="query"
+            name="query"
+            autocomplete="off"
+            required
+            minlength="2"
+            maxlength="200"
+            data-i18n-placeholder="queryPlaceholder"
+            placeholder="Venue name, city"
+          />
+        </div>
+        <div class="field">
+          <label for="provider" data-i18n="providerLabel">Data source</label>
+          <select id="provider" name="provider"></select>
+        </div>
+        <button type="submit" class="primary" id="submit" data-i18n="submit">Look up</button>
+        <p class="hint" data-i18n="queryHint">
+          Add the city or street, that is what the providers geocode against.
+        </p>
+      </form>
+
+      <section class="notice" id="message" hidden aria-live="polite">
+        <h2 id="message-title"></h2>
+        <p id="message-body"></p>
+      </section>
+
+      <section id="result" hidden>
+        <div class="venue-head">
+          <h2 id="venue-name"></h2>
+          <p id="venue-address"></p>
+          <p class="source-line" id="attribution"></p>
+        </div>
+
+        <div class="tiles" id="tiles"></div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h3 data-i18n="weekTitle">Typical week</h3>
+              <p data-i18n="weekSubtitle">
+                Share of this venue's own peak. 100 percent means as busy as it ever gets, it is
+                not a head count.
+              </p>
+            </div>
+            <div class="day-picker" id="day-picker" role="group" aria-label="Select day"></div>
+          </div>
+          <div class="heatmap">
+            <div class="heatmap-grid" id="heatmap"></div>
+          </div>
+          <div class="legend">
+            <span data-i18n="legendQuiet">quiet</span>
+            <div class="legend-scale" id="legend-scale"></div>
+            <span data-i18n="legendBusy">busy</span>
+            <span class="legend-empty" aria-hidden="true"></span>
+            <span data-i18n="legendNoData">no data</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h3 id="day-title"></h3>
+              <p data-i18n="daySubtitle">Hour by hour for the selected day.</p>
+            </div>
+          </div>
+          <div class="daybars-wrap">
+            <div class="daybars" id="daybars"></div>
+            <div class="bar-axis" id="bar-axis"></div>
+          </div>
+        </section>
+
+        <details class="table-view">
+          <summary data-i18n="tableToggle">Show the numbers as a table</summary>
+          <div class="table-scroll">
+            <table id="data-table">
+              <caption class="hint" data-i18n="tableCaption">
+                Busyness in percent of peak, by weekday and hour.
+              </caption>
+            </table>
+          </div>
+        </details>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3 data-i18n="notesTitle">What these numbers are</h3>
+          </div>
+          <ul class="notes" id="notes"></ul>
+        </section>
+      </section>
+
+      <footer class="page-footer">
+        <span id="footer-provider"></span>
+        <span>
+          <a href="https://github.com/9t29zhmwdh-coder/CrowdGauge">CrowdGauge</a>
+          <span id="footer-version"></span>
+        </span>
+      </footer>
+    </main>
+
+    <div class="tooltip" id="tooltip" role="status" hidden></div>
+
+    <script src="/static/i18n.js"></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
