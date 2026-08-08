@@ -31,6 +31,22 @@ payload as a test fixture, and fix whatever differs.
 - **Persistent history.** Recording live values over time would show whether a place is trending
   busier, which no provider offers directly.
 
+## Hosting: options weighed, decision deferred
+
+CrowdGauge runs locally. Whether a public instance should exist was assessed on 2026-08-08 and
+deliberately left open. Recorded here so the reasoning does not have to be repeated.
+
+| Option | What it would run | Blocker |
+|--------|-------------------|---------|
+| GitHub Pages | Interface only, demo curves ported to JavaScript | No real data, and a provider key in the client is never acceptable |
+| Scheduled GitHub Action | Periodic fetch, results committed as JSON | Redistributing Google Maps content publicly conflicts with the terms that reach me through SerpApi; less of an issue for BestTime |
+| Codespaces | The real app with the user's own key | Single user, no continuous availability |
+| Azure Container Apps | The real app publicly, key held server side | Needs authentication and a rate limit first, otherwise strangers spend my provider credits |
+
+The recurring constraint is not technical. It is that this tool has no authentication by design, so
+any public deployment either exposes someone's paid quota or serves data it is not licensed to
+redistribute. A public instance therefore needs an auth story before it needs a hosting platform.
+
 ## Deliberately Out of Scope
 
 - **Scraping Google Maps directly.** It violates their terms of use, breaks on every layout change
