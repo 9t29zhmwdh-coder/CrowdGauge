@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-08-08
+
+### Documentation
+
+- Record in `ROADMAP.md` which hosting options were weighed for a public instance (GitHub Pages,
+  scheduled Action, Codespaces, Azure Container Apps) and why the decision is deferred: without an
+  authentication story, any public deployment either exposes a paid provider quota or redistributes
+  data it is not licensed to serve
+
 ## [0.1.0] - 2026-08-08
 
 ### Added
@@ -32,4 +41,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server binds to localhost and sends no CORS headers
 - CI pins every GitHub Action to a commit SHA and runs `pip-audit` on each pull request
 
+[0.1.1]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.1
 [0.1.0]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.0
