@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source measures them, shown in the heatmap tooltips, the stat tiles and the live tile
 - `measured_at` on live values, because counting stations publish in batches and a reading has to be
   shown with its own timestamp
+- The terminal output is translated as well and follows the shell locale by default, so a German run
+  no longer mixes English table headers into the result
 
 ### Changed
 
