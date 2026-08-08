@@ -4,7 +4,7 @@ import pytest
 from typer.testing import CliRunner
 
 from crowdgauge.cli import _sparkline, app
-from crowdgauge.config import PROVIDER_DEMO, Settings
+from crowdgauge.config import PROVIDER_DEMO, PROVIDER_OPENDATA_CH, Settings
 from crowdgauge.errors import ProviderNotConfigured
 from crowdgauge.models import DayBusyness, HourBusyness, Weekday
 from crowdgauge.providers.registry import build_provider
@@ -49,9 +49,14 @@ def test_sparkline_distinguishes_a_measured_zero_from_missing_data():
     assert line[2] == "·"
 
 
-def test_auto_falls_back_to_demo_without_any_key():
+def test_auto_prefers_the_keyless_open_data_source():
+    """Without credentials, real measurements beat synthetic curves."""
     provider = build_provider(Settings(provider="auto"))
-    assert provider.name == PROVIDER_DEMO
+    assert provider.name == PROVIDER_OPENDATA_CH
+
+
+def test_demo_remains_the_last_resort():
+    assert Settings(provider="auto").configured_providers()[-1] == PROVIDER_DEMO
 
 
 def test_unknown_provider_name_is_rejected():

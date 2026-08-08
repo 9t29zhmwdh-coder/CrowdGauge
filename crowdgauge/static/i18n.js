@@ -50,6 +50,12 @@ const TRANSLATIONS = {
     providerConfigured: "ready",
     providerMissing: "no key",
     footerSource: "Source",
+    peoplePerHour: "people per hour",
+    weekSubtitleCounts:
+      "Measured people per hour, shown as a share of this spot's own weekly peak.",
+    openDataTitle: "Running on Swiss open data",
+    openDataBody:
+      "No provider key is configured, so the active source is public pedestrian counting stations. These are real measurements, but they only cover the listed cities. Add a provider key in .env to look up arbitrary venues.",
   },
   de: {
     tagline:
@@ -94,6 +100,12 @@ const TRANSLATIONS = {
     providerConfigured: "bereit",
     providerMissing: "kein Key",
     footerSource: "Quelle",
+    peoplePerHour: "Personen pro Stunde",
+    weekSubtitleCounts:
+      "Gemessene Personen pro Stunde, dargestellt als Anteil am Wochen-Spitzenwert dieses Orts.",
+    openDataTitle: "Läuft mit Schweizer Open Data",
+    openDataBody:
+      "Es ist kein Anbieter-Key konfiguriert, aktive Quelle sind darum öffentliche Passantenzählstellen. Das sind echte Messwerte, sie decken aber nur die aufgeführten Städte ab. Für beliebige Orte einen Anbieter-Key in .env eintragen.",
   },
 };
 

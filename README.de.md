@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="RayStudio.png" alt="RayStudio Logo" width="120"/>
+  <img src="CrowdGauge.png" alt="CrowdGauge Icon" width="120"/>
   <h1>CrowdGauge</h1>
 </div>
 
@@ -10,8 +10,11 @@
 CrowdGauge nimmt einen Standort, fragt bei einem Anbieter für Besucherfrequenz nach, wie voll dieser
 Ort über die Woche typischerweise ist, und zeigt das Ergebnis als Heatmap plus Live-Wert, sofern die
 Quelle einen liefert. Die Datenquelle ist ein Adapter, dieselbe Oberfläche funktioniert also mit
-Google-basierten Daten, mit einem unabhängigen Handysignal-Panel oder mit einer synthetischen
-Demo-Quelle, die gar keinen API-Key braucht.
+Google-basierten Daten, mit einem unabhängigen Handysignal-Panel oder mit Schweizer Open Government
+Data, wofür es gar kein Konto braucht.
+
+**Es läuft sofort.** Ohne API-Key fragt es öffentliche Passantenzählstellen ab, das sind echte
+Messwerte unter offener Lizenz, inklusive tatsächlicher Personenzahlen.
 
 [![CI](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml) [![CodeQL](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/9t29zhmwdh-coder/CrowdGauge/badge)](https://scorecard.dev/viewer/?uri=github.com/9t29zhmwdh-coder/CrowdGauge)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey) ![Python](https://img.shields.io/badge/Python-3.11%2B-orange?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-blue?logo=fastapi&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude%20Code-black)
@@ -32,9 +35,14 @@ Woche ist. Das reicht für die Entscheidung, ob du jetzt hingehst oder in zwei S
 ## Was die Zahlen bedeuten
 
 Auslastung ist ein **Anteil am eigenen Spitzenwert des Orts**. 100 heisst so voll wie hier überhaupt
-je, 40 heisst deutlich ruhiger als das eigene Maximum. Es ist keine Personenzahl und lässt sich auch
-nicht in eine umrechnen. Eine gut besuchte Quartierbäckerei und ein halb leeres Stadion können beide
-80 anzeigen.
+je, 40 heisst deutlich ruhiger als das eigene Maximum. Eine gut besuchte Quartierbäckerei und ein
+halb leeres Stadion können beide 80 anzeigen, der Prozentwert vergleicht einen Ort also mit sich
+selbst und nie mit einem anderen.
+
+Ob es zusätzlich eine echte Personenzahl gibt, hängt von der Quelle ab. Google und BestTime
+veröffentlichen nur den relativen Wert, der sich nicht in eine Personenzahl umrechnen lässt. Eine
+öffentliche Zählstelle misst Personen direkt, mit `opendata_ch` zeigt die Oberfläche darum
+zusätzlich Personen pro Stunde.
 
 ## Datenquellen
 
@@ -44,18 +52,27 @@ Stosszeiten nur in der Maps-Oberfläche, der Feature-Request zur Freigabe liegt 
 Maps hat gar kein entsprechendes Feld. CrowdGauge spricht deshalb mit Anbietern, welche die Daten
 selbst lizenzieren oder messen, statt irgendwo zu scrapen.
 
-| Anbieter | Datenherkunft | Live-Wert | Kosten zum Zeitpunkt der Erstellung |
-|----------|---------------|-----------|--------------------------------------|
-| `serpapi` | Google-Maps-Stosszeiten, unter der Lizenz von SerpApi weitergegeben | ja | 250 Abfragen pro Monat gratis, danach ab 25 USD |
-| `besttime` | Unabhängiges Panel anonymisierter Handysignale, 150+ Länder | ja | credit-basiert, Gratis-Kontingent vorhanden |
-| `demo` | Lokal erzeugte synthetische Kurven, kein Netzwerkzugriff | ja | gratis, immer verfügbar |
+| Anbieter | Datenherkunft | Abdeckung | Live-Wert | Kosten zum Zeitpunkt der Erstellung |
+|----------|---------------|-----------|-----------|--------------------------------------|
+| `opendata_ch` | Städtische Passantenzählstellen, gemessene Personenzahlen | Basel, weitere Städte geplant | wenn aktuell | gratis, kein Konto |
+| `serpapi` | Google-Maps-Stosszeiten, unter der Lizenz von SerpApi weitergegeben | weltweit | ja | 250 Abfragen pro Monat gratis, danach ab 25 USD |
+| `besttime` | Unabhängiges Panel anonymisierter Handysignale | 150+ Länder | ja | credit-basiert, Gratis-Kontingent vorhanden |
+| `demo` | Lokal erzeugte synthetische Kurven, kein Netzwerkzugriff | beliebig | ja | gratis, immer verfügbar |
 
-Ohne konfigurierten Key läuft die Demo-Quelle, und jeder daraus erzeugte Bericht ist in der
-Oberfläche und in der API-Antwort als synthetisch gekennzeichnet.
+Ohne Key antwortet die Schweizer Open-Data-Quelle, denn eine echte Messung schlägt eine synthetische
+Kurve. Die Demo-Quelle bleibt als letzte Rückfallebene und kennzeichnet jeden Bericht in der
+Oberfläche und in der API-Antwort als synthetisch.
+
+Die Open-Data-Quelle misst etwas anderes als die beiden übrigen, und die Oberfläche sagt das auch:
+eine Zählstelle erfasst Personen, die einen Strassenquerschnitt passieren, sie beantwortet also
+"wie viel los ist an diesem Ort" und nicht "wie voll dieses Restaurant ist". Sie ist zugleich die
+einzige Quelle, die echte Personen pro Stunde ausweist statt eines relativen Werts.
 
 ## Funktionen
 
+- Läuft ganz ohne Konfiguration, mit echten Messwerten
 - Wochen-Heatmap über 7 Tage und 24 Stunden, die aktuelle Stunde ist markiert
+- Echte Personenzahlen pro Stunde, wo die Quelle sie misst
 - Live-Auslastung inklusive Abweichung von dem, was für diese Stunde üblich ist
 - Ruhigste und vollste Zeitfenster der Woche, berechnet statt geschätzt
 - Anbieter-Abstraktion: ein Adapter pro Quelle, pro Abfrage wählbar
@@ -68,7 +85,8 @@ Oberfläche und in der API-Antwort als synthetisch gekennzeichnet.
 ## Voraussetzungen
 
 - Python 3.11 oder neuer
-- Ein API-Key für `serpapi` oder `besttime`, optional; ohne Key läuft die Demo-Quelle
+- Kein Konto und kein API-Key für die Schweizer Open-Data-Quelle
+- Ein API-Key für `serpapi` oder `besttime`, optional, nötig für Orte ausserhalb der erfassten Städte
 
 ## Schnellstart
 
@@ -77,20 +95,24 @@ git clone https://github.com/9t29zhmwdh-coder/CrowdGauge.git
 cd CrowdGauge
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
-
-# Optional: Anbieter-Key hinterlegen
-cp .env.example .env
-# danach .env bearbeiten
-
 crowdgauge serve
 ```
 
-Danach `http://127.0.0.1:8734` öffnen.
+Danach `http://127.0.0.1:8734` öffnen und nach einer Zählstelle suchen, zum Beispiel `Wettstein`.
+Kein Key, kein Konto, echte Messwerte.
+
+Für beliebige Orte weltweit einen Anbieter-Key hinterlegen:
+
+```bash
+cp .env.example .env
+# danach .env bearbeiten und einen SerpApi- oder BestTime-Key eintragen
+```
 
 Terminal-Modus:
 
 ```bash
-crowdgauge lookup "Bahnhof, Zürich"
+crowdgauge lookup "Wettstein" --lang de      # echte Daten, ohne Key
+crowdgauge lookup "Bahnhof, Zürich"          # braucht einen serpapi- oder besttime-Key
 crowdgauge providers
 ```
 

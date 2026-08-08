@@ -11,8 +11,14 @@ PROVIDER_AUTO = "auto"
 PROVIDER_DEMO = "demo"
 PROVIDER_SERPAPI = "serpapi"
 PROVIDER_BESTTIME = "besttime"
+PROVIDER_OPENDATA_CH = "opendata_ch"
 
-KNOWN_PROVIDERS = (PROVIDER_SERPAPI, PROVIDER_BESTTIME, PROVIDER_DEMO)
+KNOWN_PROVIDERS = (
+    PROVIDER_SERPAPI,
+    PROVIDER_BESTTIME,
+    PROVIDER_OPENDATA_CH,
+    PROVIDER_DEMO,
+)
 
 
 class Settings(BaseSettings):
@@ -43,12 +49,18 @@ class Settings(BaseSettings):
         return _is_filled(self.besttime_private_key) and _is_filled(self.besttime_public_key)
 
     def configured_providers(self) -> list[str]:
-        """Providers usable right now, in preference order. Demo is always last."""
+        """Providers usable right now, in preference order.
+
+        Keyed sources come first because they cover arbitrary venues. Swiss open
+        data needs no key and returns measured counts, so it ranks above the
+        synthetic demo source, which stays the last resort.
+        """
         available = []
         if self.has_serpapi():
             available.append(PROVIDER_SERPAPI)
         if self.has_besttime():
             available.append(PROVIDER_BESTTIME)
+        available.append(PROVIDER_OPENDATA_CH)
         available.append(PROVIDER_DEMO)
         return available
 

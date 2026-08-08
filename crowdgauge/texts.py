@@ -22,6 +22,50 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Synthetic sample data, generated locally by CrowdGauge",
         "de": "Synthetische Beispieldaten, lokal von CrowdGauge erzeugt",
     },
+    "attribution_opendata_ch": {
+        "en": "Measured pedestrian counts from Swiss open government data",
+        "de": "Gemessene Passantenzahlen aus Schweizer Open Government Data",
+    },
+    "source_opendata_ch": {
+        "en": "Public pedestrian counting stations, no API key needed",
+        "de": "Öffentliche Passantenzählstellen, kein API-Key nötig",
+    },
+    "note_counting_station": {
+        "en": (
+            "Measured head counts at a public counting station, so this is how busy the spot is, "
+            "not how full a venue is."
+        ),
+        "de": (
+            "Gemessene Personenzahlen an einer öffentlichen Zählstelle, das beschreibt also die "
+            "Frequenz am Ort, nicht die Auslastung eines Lokals."
+        ),
+    },
+    "note_open_licence": {
+        "en": "Published under an open licence by {city}.",
+        "de": "Unter offener Lizenz veröffentlicht von {city}.",
+    },
+    "note_history_window": {
+        "en": "Hourly average over the last {weeks} weeks.",
+        "de": "Stundenmittel über die letzten {weeks} Wochen.",
+    },
+    "note_reading_too_old": {
+        "en": (
+            "No live value: this station publishes in batches, its newest reading is from "
+            "{timestamp}."
+        ),
+        "de": (
+            "Kein Live-Wert: diese Zählstelle publiziert schubweise, der jüngste Messwert "
+            "stammt vom {timestamp}."
+        ),
+    },
+    "note_no_reading": {
+        "en": "No live value: the station returned no recent reading.",
+        "de": "Kein Live-Wert: die Zählstelle lieferte keinen aktuellen Messwert.",
+    },
+    "live_measured_people": {
+        "en": "{count} people counted in that hour",
+        "de": "{count} Personen in dieser Stunde gezählt",
+    },
     "note_share_of_peak": {
         "en": "Scores are a share of this venue's own peak, not a head count.",
         "de": "Die Werte sind ein Anteil am eigenen Spitzenwert des Orts, keine Personenzahl.",

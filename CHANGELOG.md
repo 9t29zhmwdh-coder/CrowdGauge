@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-08
+
+### Added
+
+- Swiss open data provider (`opendata_ch`): public pedestrian counting stations queried through
+  Opendatasoft, no account and no API key. Basel is covered first, the city catalogue is a table so
+  further cities are a data change rather than a code change
+- Actual head counts: `HourBusyness.count` and `LiveBusyness.count` carry people per hour where the
+  source measures them, shown in the heatmap tooltips, the stat tiles and the live tile
+- `measured_at` on live values, because counting stations publish in batches and a reading has to be
+  shown with its own timestamp
+
+### Changed
+
+- Without a configured key the active source is now `opendata_ch` instead of `demo`: a real
+  measurement beats a synthetic curve. The demo provider stays as the last resort
+- The weekly subtitle adapts to the source, since "this is not a head count" is wrong for a station
+  that counts heads
+- Product icon replaces the studio logo in the README header
+
+### Fixed
+
+- A reading older than six hours is no longer presented as a live value, and the interface states
+  why the live value is missing instead of leaving it blank
+
 ## [0.1.1] - 2026-08-08
 
 ### Documentation
@@ -41,5 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server binds to localhost and sends no CORS headers
 - CI pins every GitHub Action to a commit SHA and runs `pip-audit` on each pull request
 
+[0.2.0]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.2.0
 [0.1.1]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.1
 [0.1.0]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.0

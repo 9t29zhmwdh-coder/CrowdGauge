@@ -96,7 +96,10 @@ function liveTile(live) {
   if (!live || live.score === null || live.score === undefined) {
     return plainTile(t("liveLabel"), t("liveNone"), t("liveNoneNote"), true);
   }
-  const tile = plainTile(t("liveLabel"), `${live.score}%`, live.label || null);
+  const measuredNote = live.measured_at
+    ? `${live.label || ""} (${formatTimestamp(live.measured_at)})`.trim()
+    : live.label || null;
+  const tile = plainTile(t("liveLabel"), `${live.score}%`, measuredNote);
   if (typeof live.delta_to_typical === "number") {
     const delta = document.createElement("p");
     delta.className = "tile-note";
@@ -114,7 +117,19 @@ function liveTile(live) {
 function slotTile(label, slot) {
   if (!slot) return plainTile(label, t("noData"), null, true);
   const weekday = TRANSLATIONS[state.language].weekdaysShort[slot.weekday];
-  return plainTile(label, `${slot.score}%`, `${weekday} ${formatHour(slot.hour)}`);
+  const measured = countFor(slot.weekday, slot.hour);
+  const note =
+    measured === null
+      ? `${weekday} ${formatHour(slot.hour)}`
+      : `${weekday} ${formatHour(slot.hour)}, ${measured} ${t("peoplePerHour")}`;
+  return plainTile(label, `${slot.score}%`, note);
+}
+
+/* Head counts only exist for sources that actually measure people, so every
+   place that shows one has to cope with its absence. */
+function countFor(weekday, hour) {
+  const slot = state.report?.days?.[weekday]?.hours?.[hour];
+  return slot && typeof slot.count === "number" ? slot.count : null;
 }
 
 function plainTile(label, value, note, smallValue) {
@@ -184,13 +199,20 @@ function heatCell(dayIndex, slot) {
   cell.style.color = inkFor(slot.score);
   cell.setAttribute("aria-label", `${label}: ${slot.score}${t("percentOfPeak")}`);
   if (isCurrentSlot(dayIndex, slot.hour)) cell.dataset.now = "true";
-  attachTooltip(cell, `${label}\n${slot.score}${t("percentOfPeak")}${labelSuffix(slot)}`);
+  attachTooltip(
+    cell,
+    `${label}\n${slot.score}${t("percentOfPeak")}${countSuffix(slot)}${labelSuffix(slot)}`,
+  );
   cell.addEventListener("click", () => selectDay(dayIndex));
   return cell;
 }
 
 function labelSuffix(slot) {
   return slot.label ? `\n${slot.label}` : "";
+}
+
+function countSuffix(slot) {
+  return typeof slot.count === "number" ? `\n${slot.count} ${t("peoplePerHour")}` : "";
 }
 
 function isCurrentSlot(dayIndex, hour) {
@@ -293,6 +315,18 @@ function renderNotes() {
   dom.footerProvider.textContent = `${t("footerSource")}: ${state.report.provider_label}`;
 }
 
+/* The default subtitle insists the figure is not a head count, which is true
+   for Google and BestTime but wrong for a counting station that measures
+   exactly that. */
+function updateWeekSubtitle() {
+  const node = document.querySelector('[data-i18n="weekSubtitle"]');
+  if (!node) return;
+  const hasCounts = state.report.days.some((day) =>
+    day.hours.some((slot) => typeof slot.count === "number"),
+  );
+  node.textContent = hasCounts ? t("weekSubtitleCounts") : t("weekSubtitle");
+}
+
 function renderReport() {
   const venue = state.report.venue;
   dom.venueName.textContent = venue.name;
@@ -354,8 +388,17 @@ async function loadProviders() {
   );
   const usable = payload.providers.find((entry) => entry.configured);
   if (usable) dom.provider.value = usable.name;
-  if (usable && usable.name === "demo") {
+  announceSource(usable);
+}
+
+/* Which source answers without a key changes what the tool can find, so say so
+   before the first lookup rather than letting a "not found" explain it. */
+function announceSource(provider) {
+  if (!provider) return;
+  if (provider.name === "demo") {
     showMessage(t("setupTitle"), t("setupBody"), "info");
+  } else if (provider.name === "opendata_ch") {
+    showMessage(t("openDataTitle"), t("openDataBody"), "info");
   }
 }
 
@@ -392,6 +435,7 @@ async function runLookup(event) {
     } else {
       hideMessage();
     }
+    updateWeekSubtitle();
     renderReport();
   } catch (error) {
     dom.result.hidden = true;
@@ -408,6 +452,13 @@ function setBusy(busy) {
 
 function formatHour(hour) {
   return `${String(hour).padStart(2, "0")}:00`;
+}
+
+function formatTimestamp(iso) {
+  const moment = new Date(iso);
+  return Number.isNaN(moment.valueOf())
+    ? iso
+    : moment.toLocaleString(state.language, { dateStyle: "short", timeStyle: "short" });
 }
 
 async function switchLanguage(code) {

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="RayStudio.png" alt="RayStudio Logo" width="120"/>
+  <img src="CrowdGauge.png" alt="CrowdGauge icon" width="120"/>
   <h1>CrowdGauge</h1>
 </div>
 
@@ -7,10 +7,13 @@
 
 **How busy a place usually is, hour by hour. Python, FastAPI, swappable footfall providers.**
 
-CrowdGauge takes a location, asks a footfall data provider how busy that venue typically is across
+CrowdGauge takes a location, asks a footfall data provider how busy that place typically is across
 the week, and shows the result as a heatmap plus a live value where the source offers one. The
 provider is an adapter, so the same interface works with Google based data, with an independent
-phone signal panel, or with a synthetic demo source that needs no API key at all.
+phone signal panel, or with Swiss open government data that needs no account at all.
+
+**It works out of the box.** Without any API key it queries public pedestrian counting stations,
+which are real measurements published under an open licence, complete with actual head counts.
 
 [![CI](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml) [![CodeQL](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/9t29zhmwdh-coder/CrowdGauge/badge)](https://scorecard.dev/viewer/?uri=github.com/9t29zhmwdh-coder/CrowdGauge)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey) ![Python](https://img.shields.io/badge/Python-3.11%2B-orange?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-blue?logo=fastapi&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude%20Code-black)
@@ -30,9 +33,13 @@ or in two hours.
 
 ## What the numbers mean
 
-Busyness is a **share of that venue's own peak**. 100 means as busy as this place ever gets, 40
-means clearly quieter than its own maximum. It is not a head count, and it cannot be converted into
-one. A busy corner bakery and a half empty stadium can both read 80.
+Busyness is a **share of that place's own peak**. 100 means as busy as it ever gets, 40 means
+clearly quieter than its own maximum. A busy corner bakery and a half empty stadium can both read
+80, so the percentage compares a place with itself and never with another place.
+
+Whether an actual number of people exists depends on the source. Google and BestTime only ever
+publish the relative figure, and it cannot be converted into a head count. A public counting station
+measures people directly, so with `opendata_ch` the interface additionally shows people per hour.
 
 ## Data sources
 
@@ -42,18 +49,27 @@ only in the Maps interface, and the feature request to expose it has been open s
 Maps has no equivalent field at all. CrowdGauge therefore talks to providers that license or measure
 the data themselves, instead of scraping anyone.
 
-| Provider | Data origin | Live value | Cost at the time of writing |
-|----------|-------------|-----------|------------------------------|
-| `serpapi` | Google Maps popular times, relayed under SerpApi's licence | yes | 250 searches per month free, then from 25 USD |
-| `besttime` | Independent panel of anonymised phone signals, 150+ countries | yes | credit based, free tier available |
-| `demo` | Synthetic curves generated locally, no network access | yes | free, always available |
+| Provider | Data origin | Coverage | Live value | Cost at the time of writing |
+|----------|-------------|----------|-----------|------------------------------|
+| `opendata_ch` | Municipal pedestrian counters, measured head counts | Basel, more cities planned | when recent | free, no account |
+| `serpapi` | Google Maps popular times, relayed under SerpApi's licence | worldwide | yes | 250 searches per month free, then from 25 USD |
+| `besttime` | Independent panel of anonymised phone signals | 150+ countries | yes | credit based, free tier available |
+| `demo` | Synthetic curves generated locally, no network access | anything | yes | free, always available |
 
-The demo provider is the default when no key is configured, and every report it produces is labelled
-as synthetic in the interface and in the API response.
+Without a key the Swiss open data source answers, because a real measurement beats a synthetic one.
+The demo provider remains as a last resort and labels every report it produces as synthetic, in the
+interface and in the API response.
+
+The open data source measures something different from the other two, and the interface says so:
+a counting station records people passing a street cross section, so it answers "how busy is this
+spot" rather than "how full is this restaurant". It is also the only source that reports actual
+people per hour instead of a relative figure.
 
 ## Features
 
+- Works with no configuration at all, on real measured data
 - Weekly heatmap of 7 days by 24 hours, with the current hour marked
+- Actual head counts per hour where the source measures them
 - Live busyness including the difference to what is typical for that hour
 - Quietest and busiest slots of the week, computed rather than eyeballed
 - Provider abstraction: one adapter per source, selectable per request
@@ -66,7 +82,8 @@ as synthetic in the interface and in the API response.
 ## Requirements
 
 - Python 3.11 or newer
-- An API key for `serpapi` or `besttime`, optional; without one the demo provider runs
+- No account and no API key for the Swiss open data source
+- An API key for `serpapi` or `besttime`, optional, needed for venues outside the covered cities
 
 ## Quick Start
 
@@ -75,20 +92,24 @@ git clone https://github.com/9t29zhmwdh-coder/CrowdGauge.git
 cd CrowdGauge
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
-
-# Optional: add a provider key
-cp .env.example .env
-# then edit .env
-
 crowdgauge serve
 ```
 
-Then open `http://127.0.0.1:8734`.
+Then open `http://127.0.0.1:8734` and search for a counting station, for example `Wettstein`. No
+key, no account, real measurements.
+
+To look up arbitrary venues worldwide, add a provider key:
+
+```bash
+cp .env.example .env
+# then edit .env and put in a SerpApi or BestTime key
+```
 
 Terminal mode:
 
 ```bash
-crowdgauge lookup "Central Station, Zurich"
+crowdgauge lookup "Wettstein" --lang en      # real data, no key needed
+crowdgauge lookup "Central Station, Zurich"  # needs a serpapi or besttime key
 crowdgauge providers
 ```
 

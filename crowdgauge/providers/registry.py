@@ -10,6 +10,7 @@ from crowdgauge.config import (
     PROVIDER_AUTO,
     PROVIDER_BESTTIME,
     PROVIDER_DEMO,
+    PROVIDER_OPENDATA_CH,
     PROVIDER_SERPAPI,
     Settings,
 )
@@ -17,6 +18,7 @@ from crowdgauge.errors import ProviderNotConfigured
 from crowdgauge.providers.base import BusynessProvider
 from crowdgauge.providers.besttime import BestTimeProvider
 from crowdgauge.providers.demo import DemoProvider
+from crowdgauge.providers.opendata_ch import CITIES, OpenDataCHProvider
 from crowdgauge.providers.serpapi import SerpApiProvider
 from crowdgauge.texts import DEFAULT_LANGUAGE, text
 
@@ -45,6 +47,8 @@ def _instantiate(choice: str, settings: Settings, language: str) -> BusynessProv
         return _build_serpapi(settings, language)
     if choice == PROVIDER_BESTTIME:
         return _build_besttime(settings, language)
+    if choice == PROVIDER_OPENDATA_CH:
+        return OpenDataCHProvider(timeout=settings.request_timeout, language=language)
     return DemoProvider(timeout=settings.request_timeout, language=language)
 
 
@@ -92,6 +96,14 @@ def provider_status(
             "configured": settings.has_besttime(),
             "supports_live": BestTimeProvider.supports_live,
             "source": text("source_besttime", language),
+        },
+        {
+            "name": PROVIDER_OPENDATA_CH,
+            "label": f"{OpenDataCHProvider.display_name}: "
+            f"{', '.join(city.label for city in CITIES)}",
+            "configured": True,
+            "supports_live": OpenDataCHProvider.supports_live,
+            "source": text("source_opendata_ch", language),
         },
         {
             "name": PROVIDER_DEMO,

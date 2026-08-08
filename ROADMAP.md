@@ -5,9 +5,12 @@
 - [x] Provider abstraction with SerpApi, BestTime.app and a synthetic demo source
 - [x] Weekly heatmap, live value, quietest and busiest slots
 - [x] JSON API, CLI mode, English and German interface
-- [ ] Verify both live adapters against real API keys, see the honest limitation below
+- [x] Swiss open data provider, so the tool returns real measurements without an account
+- [ ] Verify the two keyed adapters against real API keys, see the honest limitation below
 
 ## Honest limitation right now
+
+The `opendata_ch` adapter has been run against the live Basel API and returns real measurements.
 
 The SerpApi and BestTime adapters are written against the providers' published response schemas and
 tested against recorded shapes. **They have not yet been run against a live account.** Where the
@@ -22,6 +25,9 @@ payload as a test fixture, and fix whatever differs.
 
 - **Contract tests against recorded live payloads.** Once real responses exist, freeze them as
   fixtures so an upstream schema change fails a test instead of a user's lookup.
+- **More cities in the open data provider.** St. Gallen publishes hourly counts through the same
+  Opendatasoft interface, Zurich publishes quarter hourly values as CSV. Adding St. Gallen is one
+  entry in the city table; Zurich needs a second reader for its file based format.
 - **Foursquare adapter.** Foursquare exposes a popularity signal, though not an hourly curve, and it
   sits behind a premium endpoint. Worth adding once the two hourly sources are verified.
 - **Venue picker in the interface.** The API already returns candidates from `/api/search`. The
