@@ -28,10 +28,17 @@ class Weekday(IntEnum):
 
 
 class HourBusyness(BaseModel):
-    """Busyness for a single hour slot in the venue's local time."""
+    """Busyness for a single hour slot in the venue's local time.
+
+    `count` is an actual number of people per hour and stays empty for most
+    sources. Google and BestTime only ever publish a relative figure, but a
+    public counting station measures heads, and throwing that away would hide
+    the most concrete number the source has.
+    """
 
     hour: int = Field(ge=0, le=23)
     score: int | None = Field(default=None, ge=0, le=100)
+    count: int | None = Field(default=None, ge=0)
     label: str | None = None
 
     @property
@@ -60,9 +67,13 @@ class LiveBusyness(BaseModel):
     """Current busyness relative to what is typical for this hour."""
 
     score: int | None = Field(default=None, ge=0, le=100)
+    count: int | None = Field(default=None, ge=0)
     delta_to_typical: int | None = None
     label: str | None = None
     captured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    measured_at: datetime | None = None
+    """When the source measured this value. Counting stations publish with a
+    delay, so "live" has to be shown with its actual timestamp."""
 
 
 class Venue(BaseModel):

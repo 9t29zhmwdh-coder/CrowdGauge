@@ -13,11 +13,13 @@ Only the lookup itself, and only to the provider you selected:
 |----------|--------------|---------|
 | `serpapi` | Your search text or a place id, plus your API key | serpapi.com |
 | `besttime` | The venue name and address, plus your API key | besttime.app |
+| `opendata` | The station name you picked, no key, no identifier | the city's open data portal |
 | `demo` | Nothing at all, it never opens a network connection | nobody |
 
 Those providers have their own privacy policies and their own retention rules, and I have no
-influence over either. If you would rather not send a query to a third party, the demo provider runs
-entirely offline.
+influence over either. The open data portals need no account, so a query there carries no
+identifier of yours beyond the usual web request. If you would rather send nothing at all, the demo
+provider runs entirely offline.
 
 ## What Stays on Your Machine
 

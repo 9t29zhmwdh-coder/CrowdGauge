@@ -17,14 +17,28 @@ def client():
 def test_health_reports_the_active_provider(client):
     payload = client.get("/api/health").json()
     assert payload["status"] == "ok"
-    assert payload["active_provider"] == "demo"
+    assert payload["active_provider"] == "opendata"
 
 
-def test_providers_endpoint_lists_all_sources_without_leaking_keys(client):
+def test_providers_endpoint_lists_all_sources(client):
     payload = client.get("/api/providers").json()
     names = [entry["name"] for entry in payload["providers"]]
-    assert names == ["serpapi", "besttime", "demo"]
-    assert "key" not in str(payload).lower().replace("no key", "")
+    assert names == ["serpapi", "besttime", "opendata", "demo"]
+
+
+def test_providers_endpoint_never_returns_key_material():
+    """Configured keys must show up as a boolean, never as their value."""
+    settings = Settings(
+        serpapi_key=SecretStr("serp-secret-value"),
+        besttime_private_key=SecretStr("bt-private-value"),
+        besttime_public_key=SecretStr("bt-public-value"),
+    )
+    payload = TestClient(create_app(settings)).get("/api/providers").json()
+    body = str(payload)
+    assert "serp-secret-value" not in body
+    assert "bt-private-value" not in body
+    assert "bt-public-value" not in body
+    assert payload["providers"][0]["configured"] is True
 
 
 def test_busyness_returns_a_full_week_with_insights(client):
@@ -78,7 +92,9 @@ def test_configured_provider_takes_precedence_over_demo():
 def test_blank_key_counts_as_missing():
     settings = Settings(provider="auto", serpapi_key=SecretStr("   "))
     assert settings.has_serpapi() is False
-    assert settings.configured_providers()[0] == "demo"
+    # Without a key the keyless open data source answers, not the synthetic one.
+    assert settings.configured_providers()[0] == "opendata"
+    assert settings.configured_providers()[-1] == "demo"
 
 
 def test_interface_is_served_at_the_root(client):

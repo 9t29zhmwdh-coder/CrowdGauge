@@ -16,6 +16,7 @@ crowdgauge/
 │   ├── base.py        abstract BusynessProvider, shared HTTP and error handling
 │   ├── serpapi.py     Google Maps popular times, relayed by SerpApi
 │   ├── besttime.py    BestTime.app footfall panel
+│   ├── opendata.py    municipal counting stations (CH, DE, AU), no API key
 │   ├── demo.py        synthetic curves, no network access
 │   └── registry.py    provider selection, the only place that knows the concrete classes
 ├── service.py         orchestration, caching, derived figures
@@ -33,8 +34,14 @@ Every provider returns a `BusynessReport`, no matter how its own payload looks:
 
 - `days`: exactly seven `DayBusyness`, each with exactly 24 `HourBusyness` slots
 - `score`: 0 to 100, a share of that venue's own peak, or `None` where the source has no data
+- `count`: actual people per hour, only where the source measures rather than estimates
 - `live`: optional current value plus the delta against what is typical for that hour
 - `notes`: provider specific caveats, shown verbatim in the interface
+
+Sources differ in what they can express, and the model has to carry that difference rather than
+flatten it. Google and BestTime publish only a relative figure; a counting station publishes people.
+`count` therefore exists alongside `score` instead of replacing it, and every consumer has to handle
+its absence.
 
 The distinction between `score = 0` and `score = None` matters. Zero means measured and empty,
 `None` means the source said nothing. The interface draws them differently, and the recommendation
