@@ -23,6 +23,7 @@ const dom = {
   message: document.getElementById("message"),
   messageTitle: document.getElementById("message-title"),
   messageBody: document.getElementById("message-body"),
+  messageLinks: document.getElementById("message-links"),
   result: document.getElementById("result"),
   venueName: document.getElementById("venue-name"),
   venueAddress: document.getElementById("venue-address"),
@@ -71,11 +72,34 @@ function applyStaticText() {
   dom.submit.textContent = t("submit");
 }
 
-function showMessage(title, body, tone) {
+function showMessage(title, body, tone, links) {
   dom.messageTitle.textContent = title;
   dom.messageBody.textContent = body;
+  dom.messageLinks.replaceChildren(...(links ? keyLinkNodes() : []));
   dom.message.dataset.tone = tone || "info";
   dom.message.hidden = false;
+}
+
+/* Every provider that covers arbitrary venues needs an account the user has to
+   create themselves, so the interface points at the sign up pages rather than
+   just saying a key is missing. */
+function keyLinkNodes() {
+  const intro = document.createElement("span");
+  intro.textContent = `${t("keyLinksIntro")} `;
+  const nodes = [intro];
+  [
+    ["SerpApi", "https://serpapi.com/users/sign_up"],
+    ["BestTime.app", "https://besttime.app/"],
+  ].forEach(([label, href], index) => {
+    if (index > 0) nodes.push(document.createTextNode(" · "));
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    nodes.push(link);
+  });
+  return nodes;
 }
 
 function hideMessage() {
@@ -398,7 +422,7 @@ function announceSource(provider) {
   if (provider.name === "demo") {
     showMessage(t("setupTitle"), t("setupBody"), "info");
   } else if (provider.name === "opendata") {
-    showMessage(t("openDataTitle"), t("openDataBody"), "info");
+    showMessage(t("openDataTitle"), t("openDataBody"), "info", true);
   }
 }
 

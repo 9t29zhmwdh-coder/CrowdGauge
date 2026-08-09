@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shown with its own timestamp
 - The terminal output is translated as well and follows the shell locale by default, so a German run
   no longer mixes English table headers into the result
+- The setup notice links to the provider sign up pages, because every source that covers arbitrary
+  venues needs an account the user creates themselves
 
 ### Changed
 
