@@ -56,7 +56,7 @@ def serve(
 def lookup(
     query: str = typer.Argument(help="Venue or counting station, ideally as 'name, city'."),
     provider: str | None = typer.Option(
-        None, help="Force a provider: opendata_ch, serpapi, besttime, demo."
+        None, help="Force a provider: opendata, serpapi, besttime, demo."
     ),
     lang: str | None = typer.Option(
         None, help="Output language: en or de. Defaults to your shell."

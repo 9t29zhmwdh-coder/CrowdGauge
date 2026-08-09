@@ -22,11 +22,11 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Synthetic sample data, generated locally by CrowdGauge",
         "de": "Synthetische Beispieldaten, lokal von CrowdGauge erzeugt",
     },
-    "attribution_opendata_ch": {
-        "en": "Measured pedestrian counts from Swiss open government data",
-        "de": "Gemessene Passantenzahlen aus Schweizer Open Government Data",
+    "attribution_opendata": {
+        "en": "Measured pedestrian counts from open government data",
+        "de": "Gemessene Passantenzahlen aus Open Government Data",
     },
-    "source_opendata_ch": {
+    "source_opendata": {
         "en": "Public pedestrian counting stations, no API key needed",
         "de": "Öffentliche Passantenzählstellen, kein API-Key nötig",
     },

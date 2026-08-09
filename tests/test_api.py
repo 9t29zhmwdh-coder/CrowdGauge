@@ -17,13 +17,13 @@ def client():
 def test_health_reports_the_active_provider(client):
     payload = client.get("/api/health").json()
     assert payload["status"] == "ok"
-    assert payload["active_provider"] == "opendata_ch"
+    assert payload["active_provider"] == "opendata"
 
 
 def test_providers_endpoint_lists_all_sources(client):
     payload = client.get("/api/providers").json()
     names = [entry["name"] for entry in payload["providers"]]
-    assert names == ["serpapi", "besttime", "opendata_ch", "demo"]
+    assert names == ["serpapi", "besttime", "opendata", "demo"]
 
 
 def test_providers_endpoint_never_returns_key_material():
@@ -93,7 +93,7 @@ def test_blank_key_counts_as_missing():
     settings = Settings(provider="auto", serpapi_key=SecretStr("   "))
     assert settings.has_serpapi() is False
     # Without a key the keyless open data source answers, not the synthetic one.
-    assert settings.configured_providers()[0] == "opendata_ch"
+    assert settings.configured_providers()[0] == "opendata"
     assert settings.configured_providers()[-1] == "demo"
 
 

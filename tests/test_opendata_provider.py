@@ -1,4 +1,4 @@
-"""Tests for the Swiss open data adapter.
+"""Tests for the open data adapter.
 
 Two things carry real risk here and are covered explicitly: the station name
 travels from client input into a query language, and a stale reading must never
@@ -13,29 +13,32 @@ import respx
 
 from crowdgauge.errors import BusynessUnavailable, UpstreamError, VenueNotFound
 from crowdgauge.models import Venue
-from crowdgauge.providers.opendata_ch import (
+from crowdgauge.providers import opendata
+from crowdgauge.providers.opendata import (
     CITIES,
     LIVE_MAX_AGE_HOURS,
-    OpenDataCHProvider,
+    OpenDataProvider,
     _quote,
 )
 
-BASEL = CITIES[0]
-RECORDS_URL = f"{BASEL.base_url}/catalog/datasets/{BASEL.dataset}/records"
+BASEL = next(city for city in CITIES if city.key == "basel")
+RECORDS_URL = BASEL.records_url()
 
 
 @pytest.fixture
-def provider():
-    return OpenDataCHProvider(timeout=5.0)
+def provider(monkeypatch):
+    """Pin the city list, so adding a city later cannot break these tests."""
+    monkeypatch.setattr(opendata, "CITIES", (BASEL,))
+    return OpenDataProvider(timeout=5.0)
 
 
 @pytest.fixture
 def venue():
     return Venue(
-        provider="opendata_ch",
+        provider="opendata",
         provider_venue_id="basel:812 Wettsteinbrücke",
         name="812 Wettsteinbrücke",
-        address="Basel",
+        address="Basel (CH)",
     )
 
 
@@ -85,7 +88,7 @@ async def test_search_returns_station_names(provider):
     venues = await provider.search_venues("Wettstein")
     assert venues[0].name == "812 Wettsteinbrücke"
     assert venues[0].provider_venue_id == "basel:812 Wettsteinbrücke"
-    assert venues[0].address == "Basel"
+    assert venues[0].address == "Basel (CH)"
 
 
 @respx.mock
@@ -112,6 +115,34 @@ async def test_search_surfaces_an_outage_instead_of_an_empty_result(provider):
     respx.get(RECORDS_URL).mock(return_value=httpx.Response(503, json={}))
     with pytest.raises(UpstreamError):
         await provider.search_venues("Wettstein")
+
+
+@respx.mock
+async def test_one_failing_portal_does_not_hide_the_others(monkeypatch):
+    """A city being down must not swallow results from the remaining cities."""
+    melbourne = next(city for city in CITIES if city.key == "melbourne")
+    monkeypatch.setattr(opendata, "CITIES", (BASEL, melbourne))
+    respx.get(RECORDS_URL).mock(return_value=httpx.Response(503, json={}))
+    respx.get(melbourne.records_url()).mock(
+        return_value=httpx.Response(200, json={"results": [{"sensor_name": "Bourke155_T"}]})
+    )
+
+    venues = await OpenDataProvider(timeout=5.0).search_venues("Bourke")
+
+    assert [venue.name for venue in venues] == ["Bourke155_T"]
+    assert venues[0].provider_venue_id == "melbourne:Bourke155_T"
+
+
+def test_every_city_declares_a_usable_weekday_base():
+    """Monday must be zero after the offset, or a whole week lands wrong."""
+    assert all(city.weekday_base in (0, 1) for city in CITIES)
+
+
+def test_every_city_points_at_a_concrete_dataset():
+    """No placeholders: Dortmund renames columns between yearly datasets, so a
+    computed dataset id would silently query the wrong schema."""
+    assert all("{" not in city.dataset for city in CITIES)
+    assert all(city.records_url().startswith("https://") for city in CITIES)
 
 
 @respx.mock
@@ -168,9 +199,7 @@ async def test_missing_readings_are_reported_as_a_data_gap(provider, venue):
 
 @respx.mock
 async def test_unknown_city_prefix_is_rejected(provider):
-    unknown = Venue(
-        provider="opendata_ch", provider_venue_id="genf:Rue du Test", name="Rue du Test"
-    )
+    unknown = Venue(provider="opendata", provider_venue_id="genf:Rue du Test", name="Rue du Test")
     with pytest.raises(VenueNotFound):
         await provider.fetch_report(unknown)
 

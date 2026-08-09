@@ -11,12 +11,12 @@ PROVIDER_AUTO = "auto"
 PROVIDER_DEMO = "demo"
 PROVIDER_SERPAPI = "serpapi"
 PROVIDER_BESTTIME = "besttime"
-PROVIDER_OPENDATA_CH = "opendata_ch"
+PROVIDER_OPENDATA = "opendata"
 
 KNOWN_PROVIDERS = (
     PROVIDER_SERPAPI,
     PROVIDER_BESTTIME,
-    PROVIDER_OPENDATA_CH,
+    PROVIDER_OPENDATA,
     PROVIDER_DEMO,
 )
 
@@ -60,7 +60,7 @@ class Settings(BaseSettings):
             available.append(PROVIDER_SERPAPI)
         if self.has_besttime():
             available.append(PROVIDER_BESTTIME)
-        available.append(PROVIDER_OPENDATA_CH)
+        available.append(PROVIDER_OPENDATA)
         available.append(PROVIDER_DEMO)
         return available
 

@@ -4,7 +4,7 @@ import pytest
 from typer.testing import CliRunner
 
 from crowdgauge.cli import _sparkline, app, detect_language
-from crowdgauge.config import PROVIDER_DEMO, PROVIDER_OPENDATA_CH, Settings
+from crowdgauge.config import PROVIDER_DEMO, PROVIDER_OPENDATA, Settings
 from crowdgauge.errors import ProviderNotConfigured
 from crowdgauge.models import DayBusyness, HourBusyness, Weekday
 from crowdgauge.providers.registry import build_provider
@@ -17,7 +17,7 @@ def test_providers_command_lists_every_source():
     assert result.exit_code == 0
     assert "BestTime" in result.stdout
     assert "Demo" in result.stdout
-    assert "Swiss open data" in result.stdout
+    assert "Open data" in result.stdout
 
 
 def test_cli_output_is_fully_translated(monkeypatch):
@@ -74,7 +74,7 @@ def test_sparkline_distinguishes_a_measured_zero_from_missing_data():
 def test_auto_prefers_the_keyless_open_data_source():
     """Without credentials, real measurements beat synthetic curves."""
     provider = build_provider(Settings(provider="auto"))
-    assert provider.name == PROVIDER_OPENDATA_CH
+    assert provider.name == PROVIDER_OPENDATA
 
 
 def test_demo_remains_the_last_resort():

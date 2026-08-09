@@ -5,12 +5,12 @@
 - [x] Provider abstraction with SerpApi, BestTime.app and a synthetic demo source
 - [x] Weekly heatmap, live value, quietest and busiest slots
 - [x] JSON API, CLI mode, English and German interface
-- [x] Swiss open data provider, so the tool returns real measurements without an account
+- [x] Open data provider, so the tool returns real measurements without an account
 - [ ] Verify the two keyed adapters against real API keys, see the honest limitation below
 
 ## Honest limitation right now
 
-The `opendata_ch` adapter has been run against the live Basel API and returns real measurements.
+The `opendata` adapter has been run against the live Basel, Dortmund and Melbourne portals and returns real measurements.
 
 The SerpApi and BestTime adapters are written against the providers' published response schemas and
 tested against recorded shapes. **They have not yet been run against a live account.** Where the
@@ -25,9 +25,14 @@ payload as a test fixture, and fix whatever differs.
 
 - **Contract tests against recorded live payloads.** Once real responses exist, freeze them as
   fixtures so an upstream schema change fails a test instead of a user's lookup.
-- **More cities in the open data provider.** St. Gallen publishes hourly counts through the same
-  Opendatasoft interface, Zurich publishes quarter hourly values as CSV. Adding St. Gallen is one
-  entry in the city table; Zurich needs a second reader for its file based format.
+- **Dortmund's yearly dataset rollover.** Dortmund publishes one dataset per year and renames its
+  columns between editions, so the pinned dataset has to be revisited each January. A check that
+  fails loudly when the pinned dataset stops returning recent rows would catch it automatically.
+- **Readable Melbourne station names.** The counting dataset only carries codes like `Bourke155_T`.
+  A separate sensor location dataset holds the plain names and would make the search usable.
+- **More cities.** St. Gallen, Liège and Brisbane publish comparable hourly counts on Opendatasoft
+  portals, each one a row in the city table. Zurich publishes quarter hourly values as CSV, which
+  needs a second reader for its file based format.
 - **Foursquare adapter.** Foursquare exposes a popularity signal, though not an hourly curve, and it
   sits behind a premium endpoint. Worth adding once the two hourly sources are verified.
 - **Venue picker in the interface.** The API already returns candidates from `/api/search`. The

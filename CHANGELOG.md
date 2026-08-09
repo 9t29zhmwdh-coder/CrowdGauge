@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Swiss open data provider (`opendata_ch`): public pedestrian counting stations queried through
-  Opendatasoft, no account and no API key. Basel is covered first, the city catalogue is a table so
-  further cities are a data change rather than a code change
+- Open data provider (`opendata`): public pedestrian counting stations queried through Opendatasoft,
+  no account and no API key. Covered so far: Basel (CH), Dortmund (DE) and Melbourne (AU), all three
+  verified against the live portals. The city catalogue is a table, so a further city is a data
+  change rather than a code change
 - Actual head counts: `HourBusyness.count` and `LiveBusyness.count` carry people per hour where the
   source measures them, shown in the heatmap tooltips, the stat tiles and the live tile
 - `measured_at` on live values, because counting stations publish in batches and a reading has to be
@@ -21,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Without a configured key the active source is now `opendata_ch` instead of `demo`: a real
+- Without a configured key the active source is now `opendata` instead of `demo`: a real
   measurement beats a synthetic curve. The demo provider stays as the last resort
 - The weekly subtitle adapts to the source, since "this is not a head count" is wrong for a station
   that counts heads

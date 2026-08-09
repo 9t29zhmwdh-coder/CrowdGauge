@@ -12,8 +12,9 @@ the week, and shows the result as a heatmap plus a live value where the source o
 provider is an adapter, so the same interface works with Google based data, with an independent
 phone signal panel, or with Swiss open government data that needs no account at all.
 
-**It works out of the box.** Without any API key it queries public pedestrian counting stations,
-which are real measurements published under an open licence, complete with actual head counts.
+**It works out of the box.** Without any API key it queries public pedestrian counting stations in
+Switzerland, Germany and Australia. Those are real measurements published under an open licence,
+complete with actual head counts.
 
 [![CI](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml) [![CodeQL](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/9t29zhmwdh-coder/CrowdGauge/badge)](https://scorecard.dev/viewer/?uri=github.com/9t29zhmwdh-coder/CrowdGauge)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey) ![Python](https://img.shields.io/badge/Python-3.11%2B-orange?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-blue?logo=fastapi&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude%20Code-black)
@@ -39,7 +40,7 @@ clearly quieter than its own maximum. A busy corner bakery and a half empty stad
 
 Whether an actual number of people exists depends on the source. Google and BestTime only ever
 publish the relative figure, and it cannot be converted into a head count. A public counting station
-measures people directly, so with `opendata_ch` the interface additionally shows people per hour.
+measures people directly, so with `opendata` the interface additionally shows people per hour.
 
 ## Data sources
 
@@ -51,12 +52,12 @@ the data themselves, instead of scraping anyone.
 
 | Provider | Data origin | Coverage | Live value | Cost at the time of writing |
 |----------|-------------|----------|-----------|------------------------------|
-| `opendata_ch` | Municipal pedestrian counters, measured head counts | Basel, more cities planned | when recent | free, no account |
+| `opendata` | Municipal pedestrian counters, measured head counts | Basel (CH), Dortmund (DE), Melbourne (AU) | when recent | free, no account |
 | `serpapi` | Google Maps popular times, relayed under SerpApi's licence | worldwide | yes | 250 searches per month free, then from 25 USD |
 | `besttime` | Independent panel of anonymised phone signals | 150+ countries | yes | credit based, free tier available |
 | `demo` | Synthetic curves generated locally, no network access | anything | yes | free, always available |
 
-Without a key the Swiss open data source answers, because a real measurement beats a synthetic one.
+Without a key the open data source answers, because a real measurement beats a synthetic one.
 The demo provider remains as a last resort and labels every report it produces as synthetic, in the
 interface and in the API response.
 
@@ -64,6 +65,10 @@ The open data source measures something different from the other two, and the in
 a counting station records people passing a street cross section, so it answers "how busy is this
 spot" rather than "how full is this restaurant". It is also the only source that reports actual
 people per hour instead of a relative figure.
+
+Every covered city speaks the same Opendatasoft query language, so adding one is a row in the
+`CITIES` table in `crowdgauge/providers/opendata.py`, not new code. Each row declares how that
+portal expresses place, time and value, because no two of them agree on the column names.
 
 ## Features
 
@@ -82,8 +87,8 @@ people per hour instead of a relative figure.
 ## Requirements
 
 - Python 3.11 or newer
-- No account and no API key for the Swiss open data source
-- An API key for `serpapi` or `besttime`, optional, needed for venues outside the covered cities
+- No account and no API key for the open data source
+- An API key for `serpapi` or `besttime`, optional, needed for places outside the covered cities
 
 ## Quick Start
 
@@ -95,8 +100,8 @@ pip install -e .
 crowdgauge serve
 ```
 
-Then open `http://127.0.0.1:8734` and search for a counting station, for example `Wettstein`. No
-key, no account, real measurements.
+Then open `http://127.0.0.1:8734` and search for a counting station, for example `Wettstein`
+(Basel), `Westenhellweg` (Dortmund) or `Bourke` (Melbourne). No key, no account, real measurements.
 
 To look up arbitrary venues worldwide, add a provider key:
 
@@ -108,7 +113,7 @@ cp .env.example .env
 Terminal mode:
 
 ```bash
-crowdgauge lookup "Wettstein" --lang en      # real data, no key needed
+crowdgauge lookup "Westenhellweg"            # real data, no key needed
 crowdgauge lookup "Central Station, Zurich"  # needs a serpapi or besttime key
 crowdgauge providers
 ```

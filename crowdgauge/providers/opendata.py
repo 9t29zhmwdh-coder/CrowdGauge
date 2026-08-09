@@ -1,15 +1,19 @@
-"""Swiss open data adapter: public pedestrian counting stations.
+"""Open data adapter: public pedestrian counting stations, no API key.
 
-This is the only source in CrowdGauge that needs no account and no API key, and
-the only one that reports actual head counts rather than a relative figure. The
-cities publish sensor readings per hour under an open licence through
-Opendatasoft, so the whole weekly curve comes back from a single aggregation
-query.
+Cities across several countries publish their pedestrian counter readings under
+an open licence on Opendatasoft portals. They all speak the same query language,
+so one adapter covers all of them and a new city is a row in `CITIES` rather
+than new code. This is also the only source in CrowdGauge that reports actual
+head counts instead of a relative figure.
 
-What it measures is different from the other providers, and the difference
+What it measures differs from the commercial providers, and the difference
 matters: a counting station records people passing a street cross section, not
-how full a venue is. It answers "how busy is this spot" rather than "how busy
-is this restaurant".
+how full a venue is. It answers "how busy is this spot" rather than "how busy is
+this restaurant".
+
+Portals disagree on how they express time. Some ship ready made weekday and hour
+columns, others only a timestamp, so each city declares an ODSQL expression for
+both and the adapter never assumes a schema.
 """
 
 from dataclasses import dataclass
@@ -31,55 +35,104 @@ from crowdgauge.providers.base import DEFAULT_SEARCH_LIMIT, BusynessProvider, no
 # a rained out Saturday, short enough to still reflect the current season.
 HISTORY_WEEKS = 10
 
-# A counting station publishes in batches, so its newest reading is usually a
-# few hours old. Beyond this age it is history, not a live value.
+# A counting station publishes in batches, so its newest reading is often hours
+# or days old. Beyond this age it is history, not a live value.
 LIVE_MAX_AGE_HOURS = 6
 
 # Opendatasoft caps a page at 100 rows, and a full week needs 168 groups.
 _PAGE_SIZE = 100
 _WEEK_GROUPS = 168
 
+# Federation host, which proxies every public Opendatasoft portal. Using it
+# keeps one base URL for cities that have no reachable portal of their own.
+FEDERATION = "https://data.opendatasoft.com/api/explore/v2.1"
+
 
 @dataclass(frozen=True)
 class CityCatalogue:
-    """One city's Opendatasoft dataset and the column names it uses."""
+    """One city's dataset, plus how that dataset expresses time and place."""
 
     key: str
     label: str
+    country: str
     base_url: str
     dataset: str
     site_field: str
-    weekday_field: str
-    hour_field: str
     value_field: str
     timestamp_field: str
-    pedestrian_filter: str
+    weekday_expr: str
+    """ODSQL expression yielding the weekday, either a column or date_format()."""
+    weekday_base: int
+    """1 when the expression counts Monday as 1, 0 when Monday is 0."""
+    hour_expr: str
+    extra_filter: str
     attribution: str
+
+    def records_url(self) -> str:
+        return f"{self.base_url}/catalog/datasets/{self.dataset}/records"
 
 
 CITIES: tuple[CityCatalogue, ...] = (
     CityCatalogue(
         key="basel",
         label="Basel",
+        country="CH",
         base_url="https://data.bs.ch/api/explore/v2.1",
         dataset="100013",
         site_field="sitename",
-        weekday_field="weekday",
-        hour_field="hourfrom",
         value_field="total",
         timestamp_field="datetimefrom",
-        pedestrian_filter="traffictype='Fussgänger'",
+        weekday_expr="weekday",
+        weekday_base=0,
+        hour_expr="hourfrom",
+        extra_filter="traffictype='Fussgänger'",
         attribution="Open Government Data, Kanton Basel-Stadt",
+    ),
+    # Dortmund publishes one dataset per year AND renames its columns between
+    # them: the 2025 edition calls them standort / messzeitpunkt /
+    # passantenaufkommen_pro_standort, the 2026 edition name /
+    # zeitpunkt_measured_at / zeitpunkt_total_count. A year placeholder would
+    # therefore only pretend the schema is stable, so the dataset is pinned and
+    # the yearly rollover is a tracked task in ROADMAP.md.
+    CityCatalogue(
+        key="dortmund",
+        label="Dortmund",
+        country="DE",
+        base_url=FEDERATION,
+        dataset="passantenaufkommen-fussgangerzone-hellweg-2026@dortmund",
+        site_field="name",
+        value_field="zeitpunkt_total_count",
+        timestamp_field="zeitpunkt_measured_at",
+        weekday_expr="wochentag_id",
+        weekday_base=1,
+        hour_expr="stunde",
+        extra_filter="",
+        attribution="Stadt Dortmund, Open Data",
+    ),
+    CityCatalogue(
+        key="melbourne",
+        label="Melbourne",
+        country="AU",
+        base_url=FEDERATION,
+        dataset="pedestrian-counting-system-monthly-counts-per-hour@melbournetestbed",
+        site_field="sensor_name",
+        value_field="pedestriancount",
+        timestamp_field="sensing_date",
+        weekday_expr='date_format(sensing_date, "e")',
+        weekday_base=1,
+        hour_expr="hourday",
+        extra_filter="",
+        attribution="City of Melbourne, Pedestrian Counting System",
     ),
 )
 
 
-class OpenDataCHProvider(BusynessProvider):
-    """Reads Swiss municipal pedestrian counters, no API key required."""
+class OpenDataProvider(BusynessProvider):
+    """Reads municipal pedestrian counters from open data portals."""
 
-    name = "opendata_ch"
-    display_name = "Swiss open data (counting stations)"
-    attribution_key = "attribution_opendata_ch"
+    name = "opendata"
+    display_name = "Open data (counting stations)"
+    attribution_key = "attribution_opendata"
     supports_live = True
 
     async def search_venues(self, query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[Venue]:
@@ -90,15 +143,15 @@ class OpenDataCHProvider(BusynessProvider):
             try:
                 venues.extend(await self._search_city(city, term, limit))
             except UpstreamError as exc:
-                # One city being down must not fail a multi city search, but if
-                # every city fails, that is an outage and not an empty result.
+                # One portal being down must not fail a search across all of
+                # them, but if every portal fails, that is an outage rather
+                # than an empty result.
                 failures.append(exc)
         if not venues and failures:
             raise failures[0]
         if not venues:
             raise VenueNotFound(
-                f"No Swiss counting station matches '{term}'. "
-                f"Covered so far: {', '.join(city.label for city in CITIES)}."
+                f"No counting station matches '{term}'. Covered so far: {covered_cities()}."
             )
         return venues[:limit]
 
@@ -106,39 +159,35 @@ class OpenDataCHProvider(BusynessProvider):
         city = self._city_for(venue.provider_venue_id)
         site = _site_from_id(venue.provider_venue_id)
         rows = await self._fetch_week(city, site)
-        if not rows:
+        counts = _collect_counts(rows, city)
+        if not counts:
             raise BusynessUnavailable(
                 f"'{venue.name}' has no readings in the last {HISTORY_WEEKS} weeks."
             )
-        days, peak = self._build_week(rows)
+        days, peak = _build_week(counts)
         latest = await self._latest_reading(city, site)
         return BusynessReport(
             venue=venue,
             provider=self.name,
             provider_label=f"{self.display_name}, {city.label}",
-            attribution=f"{self._note('attribution_opendata_ch')}: {city.attribution}",
+            attribution=f"{self._note('attribution_opendata')}: {city.attribution}",
             days=days,
             live=self._to_live(latest, peak),
             notes=self._build_notes(city, latest),
         )
 
     async def _search_city(self, city: CityCatalogue, term: str, limit: int) -> list[Venue]:
-        """List counting station names matching the term.
+        """List station names matching the term.
 
-        Only the name is selected. Coordinates are not part of the grouped
-        result, and the interface shows no map, so fetching them would cost a
-        second request for nothing.
+        search() matches substrings; ODSQL's "like" compares the whole value.
         """
         params = {
             "select": city.site_field,
             "group_by": city.site_field,
-            # search() matches substrings; ODSQL's "like" needs an exact value.
-            "where": f"{city.pedestrian_filter} and search({city.site_field}, {_quote(term)})",
+            "where": _and(city.extra_filter, f"search({city.site_field}, {_quote(term)})"),
             "limit": str(min(limit, _PAGE_SIZE)),
         }
-        payload = await self._get_json(
-            f"{city.base_url}/catalog/datasets/{city.dataset}/records", params
-        )
+        payload = await self._get_json(city.records_url(), params)
         return [
             self._to_venue(city, row)
             for row in payload.get("results", [])
@@ -151,46 +200,32 @@ class OpenDataCHProvider(BusynessProvider):
             provider=self.name,
             provider_venue_id=f"{city.key}:{site}",
             name=site,
-            address=city.label,
+            address=f"{city.label} ({city.country})",
         )
 
     async def _fetch_week(self, city: CityCatalogue, site: str) -> list[dict]:
         """Average each weekday and hour over the history window, server side."""
         since = (datetime.now(UTC) - timedelta(weeks=HISTORY_WEEKS)).date().isoformat()
+        grouping = f"{city.weekday_expr}, {city.hour_expr}"
+        where = _and(
+            city.extra_filter,
+            f"{city.site_field}={_quote(site)}",
+            f"{city.timestamp_field} > date'{since}'",
+        )
         rows: list[dict] = []
         for offset in range(0, _WEEK_GROUPS, _PAGE_SIZE):
-            selection = (
-                f"{city.weekday_field}, {city.hour_field}, avg({city.value_field}) as mean_value"
-            )
             params = {
-                "select": selection,
-                "group_by": f"{city.weekday_field}, {city.hour_field}",
-                "where": (
-                    f"{city.pedestrian_filter} and {city.site_field}={_quote(site)} "
-                    f"and {city.timestamp_field} > date'{since}'"
-                ),
+                "select": f"{grouping}, avg({city.value_field}) as mean_value",
+                "group_by": grouping,
+                "where": where,
                 "limit": str(_PAGE_SIZE),
                 "offset": str(offset),
             }
-            payload = await self._get_json(
-                f"{city.base_url}/catalog/datasets/{city.dataset}/records", params
-            )
-            page = payload.get("results", [])
+            page = (await self._get_json(city.records_url(), params)).get("results", [])
             rows.extend(page)
             if len(page) < _PAGE_SIZE:
                 break
         return rows
-
-    def _build_week(self, rows: list[dict]) -> tuple[list[DayBusyness], float]:
-        """Turn the aggregated rows into a week, scored against the weekly peak."""
-        counts = _collect_counts(rows)
-        peak = max(counts.values(), default=0.0)
-        week = empty_week()
-        for day in week:
-            day.hours = [
-                _slot(hour, counts.get((int(day.weekday), hour)), peak) for hour in range(24)
-            ]
-        return [week[Weekday(index)] for index in range(7)], peak
 
     async def _latest_reading(
         self, city: CityCatalogue, site: str
@@ -199,14 +234,12 @@ class OpenDataCHProvider(BusynessProvider):
         params = {
             "select": f"{city.timestamp_field}, sum({city.value_field}) as hour_value",
             "group_by": city.timestamp_field,
-            "where": f"{city.pedestrian_filter} and {city.site_field}={_quote(site)}",
+            "where": _and(city.extra_filter, f"{city.site_field}={_quote(site)}"),
             "order_by": f"{city.timestamp_field} desc",
             "limit": "1",
         }
         try:
-            payload = await self._get_json(
-                f"{city.base_url}/catalog/datasets/{city.dataset}/records", params
-            )
+            payload = await self._get_json(city.records_url(), params)
         except UpstreamError:
             return None
         rows = payload.get("results") or []
@@ -252,18 +285,46 @@ class OpenDataCHProvider(BusynessProvider):
         return notes
 
 
-def _collect_counts(rows: list[dict]) -> dict[tuple[int, int], float]:
+def covered_cities() -> str:
+    return ", ".join(f"{city.label} ({city.country})" for city in CITIES)
+
+
+def _collect_counts(rows: list[dict], city: CityCatalogue) -> dict[tuple[int, int], float]:
     """Index the aggregated rows by weekday and hour, ignoring unusable ones."""
     counts: dict[tuple[int, int], float] = {}
     for row in rows:
-        weekday = _as_int(row.get("weekday"))
-        hour = _as_int(row.get("hourfrom"))
+        weekday = _as_int(_read(row, city.weekday_expr))
+        hour = _as_int(_read(row, city.hour_expr))
         value = _as_float(row.get("mean_value"))
         if weekday is None or hour is None or value is None:
             continue
+        weekday -= city.weekday_base
         if 0 <= weekday <= 6 and 0 <= hour <= 23:
             counts[(weekday, hour)] = value
     return counts
+
+
+def _read(row: dict, expression: str) -> object:
+    """Read a grouped value, which may be keyed by column name or by expression.
+
+    Opendatasoft ignores the alias on a computed group_by and returns the raw
+    expression as the key with its spaces stripped. It also echoes the spaced
+    form back as an empty field, so a candidate that exists but is None has to
+    be skipped rather than accepted.
+    """
+    for candidate in (expression, expression.replace(" ", "")):
+        value = row.get(candidate)
+        if value is not None:
+            return value
+    return None
+
+
+def _build_week(counts: dict[tuple[int, int], float]) -> tuple[list[DayBusyness], float]:
+    peak = max(counts.values(), default=0.0)
+    week = empty_week()
+    for day in week:
+        day.hours = [_slot(hour, counts.get((int(day.weekday), hour)), peak) for hour in range(24)]
+    return [week[Weekday(index)] for index in range(7)], peak
 
 
 def _slot(hour: int, value: float | None, peak: float) -> HourBusyness:
@@ -272,6 +333,11 @@ def _slot(hour: int, value: float | None, peak: float) -> HourBusyness:
     return HourBusyness(
         hour=hour, score=_clamp_percent(value / peak * 100), count=int(round(value))
     )
+
+
+def _and(*clauses: str) -> str:
+    """Join the clauses a city actually has, skipping the empty ones."""
+    return " and ".join(clause for clause in clauses if clause)
 
 
 def _quote(value: str) -> str:
@@ -293,15 +359,23 @@ def _clamp_percent(value: float) -> int:
 
 
 def _as_float(value: object) -> float | None:
-    if isinstance(value, bool) or not isinstance(value, int | float):
+    if isinstance(value, bool):
         return None
-    return float(value)
+    if isinstance(value, int | float):
+        return float(value)
+    # Computed group_by values come back as strings, for example the "e"
+    # weekday format.
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
 
 
 def _as_int(value: object) -> int | None:
-    if isinstance(value, bool) or not isinstance(value, int | float):
-        return None
-    return int(value)
+    number = _as_float(value)
+    return None if number is None else int(number)
 
 
 def _format_local(moment: datetime) -> str:

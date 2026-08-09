@@ -13,8 +13,9 @@ Quelle einen liefert. Die Datenquelle ist ein Adapter, dieselbe Oberfläche funk
 Google-basierten Daten, mit einem unabhängigen Handysignal-Panel oder mit Schweizer Open Government
 Data, wofür es gar kein Konto braucht.
 
-**Es läuft sofort.** Ohne API-Key fragt es öffentliche Passantenzählstellen ab, das sind echte
-Messwerte unter offener Lizenz, inklusive tatsächlicher Personenzahlen.
+**Es läuft sofort.** Ohne API-Key fragt es öffentliche Passantenzählstellen in der Schweiz,
+Deutschland und Australien ab. Das sind echte Messwerte unter offener Lizenz, inklusive
+tatsächlicher Personenzahlen.
 
 [![CI](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/ci.yml) [![CodeQL](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/CrowdGauge/actions/workflows/github-code-scanning/codeql) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/9t29zhmwdh-coder/CrowdGauge/badge)](https://scorecard.dev/viewer/?uri=github.com/9t29zhmwdh-coder/CrowdGauge)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey) ![Python](https://img.shields.io/badge/Python-3.11%2B-orange?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-blue?logo=fastapi&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude%20Code-black)
@@ -41,7 +42,7 @@ selbst und nie mit einem anderen.
 
 Ob es zusätzlich eine echte Personenzahl gibt, hängt von der Quelle ab. Google und BestTime
 veröffentlichen nur den relativen Wert, der sich nicht in eine Personenzahl umrechnen lässt. Eine
-öffentliche Zählstelle misst Personen direkt, mit `opendata_ch` zeigt die Oberfläche darum
+öffentliche Zählstelle misst Personen direkt, mit `opendata` zeigt die Oberfläche darum
 zusätzlich Personen pro Stunde.
 
 ## Datenquellen
@@ -54,12 +55,12 @@ selbst lizenzieren oder messen, statt irgendwo zu scrapen.
 
 | Anbieter | Datenherkunft | Abdeckung | Live-Wert | Kosten zum Zeitpunkt der Erstellung |
 |----------|---------------|-----------|-----------|--------------------------------------|
-| `opendata_ch` | Städtische Passantenzählstellen, gemessene Personenzahlen | Basel, weitere Städte geplant | wenn aktuell | gratis, kein Konto |
+| `opendata` | Städtische Passantenzählstellen, gemessene Personenzahlen | Basel (CH), Dortmund (DE), Melbourne (AU) | wenn aktuell | gratis, kein Konto |
 | `serpapi` | Google-Maps-Stosszeiten, unter der Lizenz von SerpApi weitergegeben | weltweit | ja | 250 Abfragen pro Monat gratis, danach ab 25 USD |
 | `besttime` | Unabhängiges Panel anonymisierter Handysignale | 150+ Länder | ja | credit-basiert, Gratis-Kontingent vorhanden |
 | `demo` | Lokal erzeugte synthetische Kurven, kein Netzwerkzugriff | beliebig | ja | gratis, immer verfügbar |
 
-Ohne Key antwortet die Schweizer Open-Data-Quelle, denn eine echte Messung schlägt eine synthetische
+Ohne Key antwortet die Open-Data-Quelle, denn eine echte Messung schlägt eine synthetische
 Kurve. Die Demo-Quelle bleibt als letzte Rückfallebene und kennzeichnet jeden Bericht in der
 Oberfläche und in der API-Antwort als synthetisch.
 
@@ -67,6 +68,11 @@ Die Open-Data-Quelle misst etwas anderes als die beiden übrigen, und die Oberfl
 eine Zählstelle erfasst Personen, die einen Strassenquerschnitt passieren, sie beantwortet also
 "wie viel los ist an diesem Ort" und nicht "wie voll dieses Restaurant ist". Sie ist zugleich die
 einzige Quelle, die echte Personen pro Stunde ausweist statt eines relativen Werts.
+
+Alle erfassten Städte sprechen dieselbe Opendatasoft-Abfragesprache, eine weitere Stadt ist deshalb
+eine Zeile in der `CITIES`-Tabelle in `crowdgauge/providers/opendata.py` und kein neuer Code. Jede
+Zeile deklariert, wie das jeweilige Portal Ort, Zeit und Wert benennt, denn darin ist sich keines
+mit einem anderen einig.
 
 ## Funktionen
 
@@ -85,7 +91,7 @@ einzige Quelle, die echte Personen pro Stunde ausweist statt eines relativen Wer
 ## Voraussetzungen
 
 - Python 3.11 oder neuer
-- Kein Konto und kein API-Key für die Schweizer Open-Data-Quelle
+- Kein Konto und kein API-Key für die Open-Data-Quelle
 - Ein API-Key für `serpapi` oder `besttime`, optional, nötig für Orte ausserhalb der erfassten Städte
 
 ## Schnellstart
@@ -98,8 +104,8 @@ pip install -e .
 crowdgauge serve
 ```
 
-Danach `http://127.0.0.1:8734` öffnen und nach einer Zählstelle suchen, zum Beispiel `Wettstein`.
-Kein Key, kein Konto, echte Messwerte.
+Danach `http://127.0.0.1:8734` öffnen und nach einer Zählstelle suchen, zum Beispiel `Wettstein`
+(Basel), `Westenhellweg` (Dortmund) oder `Bourke` (Melbourne). Kein Key, kein Konto, echte Messwerte.
 
 Für beliebige Orte weltweit einen Anbieter-Key hinterlegen:
 
@@ -111,7 +117,7 @@ cp .env.example .env
 Terminal-Modus:
 
 ```bash
-crowdgauge lookup "Wettstein" --lang de      # echte Daten, ohne Key
+crowdgauge lookup "Westenhellweg"            # echte Daten, ohne Key
 crowdgauge lookup "Bahnhof, Zürich"          # braucht einen serpapi- oder besttime-Key
 crowdgauge providers
 ```

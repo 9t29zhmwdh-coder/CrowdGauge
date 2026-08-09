@@ -16,7 +16,7 @@ crowdgauge/
 │   ├── base.py        abstract BusynessProvider, shared HTTP and error handling
 │   ├── serpapi.py     Google Maps popular times, relayed by SerpApi
 │   ├── besttime.py    BestTime.app footfall panel
-│   ├── opendata_ch.py Swiss municipal counting stations, no API key
+│   ├── opendata.py    municipal counting stations (CH, DE, AU), no API key
 │   ├── demo.py        synthetic curves, no network access
 │   └── registry.py    provider selection, the only place that knows the concrete classes
 ├── service.py         orchestration, caching, derived figures

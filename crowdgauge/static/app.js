@@ -397,7 +397,7 @@ function announceSource(provider) {
   if (!provider) return;
   if (provider.name === "demo") {
     showMessage(t("setupTitle"), t("setupBody"), "info");
-  } else if (provider.name === "opendata_ch") {
+  } else if (provider.name === "opendata") {
     showMessage(t("openDataTitle"), t("openDataBody"), "info");
   }
 }
