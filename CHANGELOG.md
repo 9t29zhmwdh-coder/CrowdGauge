@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-08-14
+
+### Changed
+
+- The CodeQL workflow now matches the setup the other repositories in this portfolio use: the job
+  requests only `security-events: write` instead of repeating the read grants the workflow already
+  defaults to, which OpenSSF Scorecard counts as excessive token permissions, and the analysis runs
+  the `security-extended` query suite rather than the default one
+
 ## [0.2.1] - 2026-08-14
 
 ### Changed
@@ -83,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server binds to localhost and sends no CORS headers
 - CI pins every GitHub Action to a commit SHA and runs `pip-audit` on each pull request
 
+[0.2.2]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.2.2
 [0.2.1]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.2.1
 [0.2.0]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.2.0
 [0.1.1]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.1
