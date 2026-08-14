@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-08-14
+
+### Changed
+
+- CodeQL moved from the repository default setup to a workflow in the repository
+  (`.github/workflows/codeql.yml`). Default setup never runs on Dependabot pull requests, so the
+  required `Analyze (python)` and `Analyze (actions)` checks were missing there and every Dependabot
+  pull request stayed blocked. The workflow keeps the same three languages and the same check names,
+  so the branch ruleset is unchanged and stays enforced
+- GitHub Actions updated within their pinned SHAs: `actions/checkout` to v7.0.1, `actions/setup-python`
+  to v7.0.0, `ossf/scorecard-action` to v2.4.4 and `github/codeql-action` to v4.37.6
+
 ## [0.2.0] - 2026-08-08
 
 ### Added
@@ -71,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server binds to localhost and sends no CORS headers
 - CI pins every GitHub Action to a commit SHA and runs `pip-audit` on each pull request
 
+[0.2.1]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.2.1
 [0.2.0]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.2.0
 [0.1.1]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.1
 [0.1.0]: https://github.com/9t29zhmwdh-coder/CrowdGauge/releases/tag/v0.1.0
