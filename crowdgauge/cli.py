@@ -48,7 +48,8 @@ def serve(
     bind_host = host or settings.host
     bind_port = port or settings.port
     console.print(f"[bold]CrowdGauge {__version__}[/bold] on http://{bind_host}:{bind_port}")
-    console.print(f"Active provider: {settings.configured_providers()[0]}")
+    active = text("cli_active_provider", detect_language())
+    console.print(f"{active}: {settings.configured_providers()[0]}")
     uvicorn.run("crowdgauge.app:app", host=bind_host, port=bind_port, log_level="info")
 
 
