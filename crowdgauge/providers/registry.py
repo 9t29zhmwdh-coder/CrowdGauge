@@ -99,14 +99,14 @@ def provider_status(
         },
         {
             "name": PROVIDER_OPENDATA,
-            "label": f"{OpenDataProvider.display_name}: {covered_cities()}",
+            "label": f"{text('label_opendata', language)}: {covered_cities()}",
             "configured": True,
             "supports_live": OpenDataProvider.supports_live,
             "source": text("source_opendata", language),
         },
         {
             "name": PROVIDER_DEMO,
-            "label": DemoProvider.display_name,
+            "label": text("label_demo", language),
             "configured": True,
             "supports_live": DemoProvider.supports_live,
             "source": text("source_demo", language),

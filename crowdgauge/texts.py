@@ -104,6 +104,12 @@ TEXTS: dict[str, dict[str, str]] = {
         "en": "Set a provider API key in .env to query real footfall data.",
         "de": "Für echte Frequenzdaten einen Anbieter-Key in .env eintragen.",
     },
+    "label_opendata": {
+        "en": "Open data (counting stations)",
+        "de": "Open Data (Zählstellen)",
+    },
+    "label_demo": {"en": "Demo (synthetic)", "de": "Demo (synthetisch)"},
+    "cli_active_provider": {"en": "Active provider", "de": "Aktiver Anbieter"},
     "source_serpapi": {
         "en": "Google Maps popular times, relayed by SerpApi",
         "de": "Google-Maps-Stosszeiten, weitergegeben durch SerpApi",
