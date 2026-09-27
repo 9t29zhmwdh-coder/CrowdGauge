@@ -1,0 +1,11 @@
+# Tools the CI needs on top of the project's own dependencies.
+# requirements/ci.txt pins these together with pyproject.toml's dependencies and
+# its extras, with hashes. Regenerate it with the command in ci.txt's header.
+# setuptools ships preinstalled (and outdated) with the runner's Python; pinning
+# it here upgrades it under hash checking so pip-audit passes.
+pip
+setuptools
+pip-audit
+build
+hatchling
+uv
