@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2026-09-27
+
+### Security
+
+- Every package the CI and the release build install now comes from `requirements/ci.txt` with its hash checked (`pip install --require-hashes`). Before, the workflows took whatever version the package index served at that moment, which OpenSSF Scorecard marks down under pinned dependencies. The project itself is installed with `--no-deps`, and wheels are built with `--no-isolation` so the build backend is the pinned one rather than a fresh download.
+- CI checks that `requirements/ci.txt` still matches `pyproject.toml`, starting from the committed pins, so a changed dependency cannot slip past the lock. Dependabot keeps the pins current.
+- The dependency audit job ran without installing the project, so it only checked pip-audit's own dependencies. It now installs the pinned dependencies first and audits what CrowdGauge actually runs on.
+
+---
+
 ## [0.2.4] - 2026-09-27
 
 ### Changed

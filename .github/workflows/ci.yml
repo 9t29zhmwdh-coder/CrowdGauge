@@ -26,8 +26,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install package and dev dependencies
-        run: pip install -e ".[dev]"
+      # Every package comes from requirements/ci.txt with its hash checked;
+      # CrowdGauge itself is installed without resolving anything further.
+      - name: Install pinned dependencies and tools
+        run: |
+          pip install --require-hashes -r requirements/ci.txt
+          pip install --no-deps -e .
+
+      - name: Lock file matches pyproject.toml
+        run: |
+          cp requirements/ci.txt fresh.txt
+          uv pip compile pyproject.toml requirements/tools.in --extra dev --universal --python-version 3.11 --generate-hashes -q --custom-compile-command "uv pip compile pyproject.toml requirements/tools.in --extra dev --universal --python-version 3.11 --generate-hashes -o requirements/ci.txt" -o fresh.txt
+          diff requirements/ci.txt fresh.txt
 
       - name: Lint
         run: ruff check --output-format=github .
@@ -50,10 +60,12 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install audit tooling
+      # Installing the project's pinned dependencies first means the audit
+      # covers what CrowdGauge actually runs on, not only pip-audit itself.
+      - name: Install pinned dependencies and tools
         run: |
-          pip install --upgrade pip setuptools
-          pip install pip-audit
+          pip install --require-hashes -r requirements/ci.txt
+          pip install --no-deps -e .
 
       - name: Audit dependencies
         run: pip-audit --skip-editable
@@ -70,7 +82,8 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install pinned build tools
+        run: pip install --require-hashes -r requirements/ci.txt
+
       - name: Build wheel and sdist
-        run: |
-          pip install build
-          python -m build
+        run: python -m build --no-isolation
