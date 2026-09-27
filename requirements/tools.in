@@ -9,3 +9,4 @@ pip-audit
 build
 hatchling
 uv
+editables

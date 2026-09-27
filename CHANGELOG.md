@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2026-09-27
+
+### Security
+
+- The editable install in CI now runs with `--no-build-isolation`, so the build backend pinned in `requirements/ci.txt` builds it. Before, pip fetched a fresh, unpinned backend into an isolated environment for that one step, which undercut the hash-pinned installs from v0.2.5.
+- `editables` joins the lock, since hatchling needs it for editable installs once build isolation is off.
+- Workflows call `python -m pip` rather than `pip`, because `pip.exe` cannot replace itself on Windows when the lock pins a newer pip.
+
+---
+
 ## [0.2.5] - 2026-09-27
 
 ### Security
