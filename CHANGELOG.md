@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-09-27
+
+### Changed
+
+Dependency and CI updates merged since v0.2.3, each with green checks:
+
+- chore(ci): Bump the actions group across 1 directory with 3 updates (#6)
+
+---
+
 ## [0.2.3] - 2026-09-25
 
 ### Fixed
